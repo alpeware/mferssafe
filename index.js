@@ -10,6 +10,8 @@ const safeL2 = '0xfb1bffC9d739B8D520DaF37dF666da4C687191EA'
 const immutableFactory = '0x0000000000FFe8B47B3e2130213B802212439497'
 const migrationContractAddress = '0xEDDf646Ff40C3E125b3353FF31e1b4Dba32417B2'
 
+const flattenedMigration = 'https://gist.github.com/alpeware/e55809599bb73d7bfc7537753a89207b'
+
 const [abiFactory, abiProxy, abiMigration, byteCodeMigration] = await Promise.all([
   fetch('Factory.abi.json').then(e => e.json()).then(e => JSON.parse(e.result)),
   fetch('SafeProxy.abi.json').then(e => e.json()).then(e => JSON.parse(e.result)),
@@ -49,7 +51,7 @@ const provider = new ethers.providers.Web3Provider(window.ethereum, "any")
 document.querySelector('.mm').addEventListener('click', async (e) => {
   try {
     const accounts = await getAccounts(provider)
-    //await switchNetwork(provider, testnetChainId)
+    await switchNetwork(provider, testnetChainId)
     const chainId = await getNetwork(provider)
     document.querySelector('.account').innerHTML = `Connected as <b>${accounts[0]}</b> on chain <b>${fromHex(chainId)}</b>`
     Array.from(document.querySelectorAll('button'))
