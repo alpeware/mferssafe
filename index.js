@@ -4,12 +4,17 @@
 
 const mainnetChainId = 8453
 const testnetChainId = 84532
+
 const mfersSafe = '0x21130E908bba2d41B63fbca7caA131285b8724F8'
 const safeL2 = '0xfb1bffC9d739B8D520DaF37dF666da4C687191EA'
+const immutableFactory = '0x0000000000FFe8B47B3e2130213B802212439497'
+const migrationContractAddress = '0xEDDf646Ff40C3E125b3353FF31e1b4Dba32417B2'
 
+const factoryUrl = 'https://api-sepolia.basescan.org/api?module=contract&action=getabi&address=0x0000000000ffe8b47b3e2130213b802212439497'
 const safeProxyUrl = 'https://api.basescan.org/api?module=contract&action=getabi&address=0x69f4D1788e39c87893C980c06EdF4b7f686e2938'
 
-const [abiProxy, abiMigration, byteCodeMigration] = await Promise.all([
+const [abiFactory, abiProxy, abiMigration, byteCodeMigration] = await Promise.all([
+  fetch(factoryUrl).then(e => e.json()).then(e => JSON.parse(e.result)),
   fetch(safeProxyUrl).then(e => e.json()).then(e => JSON.parse(e.result)),
   fetch('SafeToL2Migration.abi.json').then(e => e.json()),
   fetch('SafeToL2Migration.bytecode.txt').then(e => e.text()).then(e => e.trim())
@@ -61,11 +66,17 @@ document.querySelector('.mm').addEventListener('click', async (e) => {
 document.querySelector('.deploy').addEventListener('click', async (e) => {
   try {
     const signer = await getSigner(provider)
-    const contract = await deploy(createContract(abiMigration, byteCodeMigration, signer))
+    const factory = getContract(immutableFactory, abiFactory, signer)
     document.querySelector('.contract').innerHTML = `Waiting for confirmation...`
 
-    await contract.deployTransaction.wait()
-    const { address } = contract
+    const address = await factory.findCreate2Address(ethers.constants.HashZero, byteCodeMigration)
+    console.log(address)
+
+    const tx = await factory.safeCreate2(ethers.constants.HashZero, byteCodeMigration)
+    await tx.wait()
+    console.log(tx)
+    const { data } = tx
+
     document.querySelector('.contract').innerHTML = `Deployed contract to <b>${address}</b>`
   } catch (ex) {
     console.error(ex)
@@ -78,7 +89,6 @@ document.querySelector('.sign').addEventListener('click', async (e) => {
     const signer = await getSigner(provider)
     const safeContract = getContract(mfersSafe, abiProxy, provider)
 
-    const migrationContractAddress = document.querySelector('.migrationContract').value
     const migrationContract = getContract(migrationContractAddress, abiMigration, provider)
     const callData = migrationContract.interface.encodeFunctionData('migrateToL2', [ safeL2 ])
     console.log(callData)
