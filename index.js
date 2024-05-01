@@ -10,12 +10,9 @@ const safeL2 = '0xfb1bffC9d739B8D520DaF37dF666da4C687191EA'
 const immutableFactory = '0x0000000000FFe8B47B3e2130213B802212439497'
 const migrationContractAddress = '0xEDDf646Ff40C3E125b3353FF31e1b4Dba32417B2'
 
-const factoryUrl = 'https://api-sepolia.basescan.org/api?module=contract&action=getabi&address=0x0000000000ffe8b47b3e2130213b802212439497'
-const safeProxyUrl = 'https://api.basescan.org/api?module=contract&action=getabi&address=0x69f4D1788e39c87893C980c06EdF4b7f686e2938'
-
 const [abiFactory, abiProxy, abiMigration, byteCodeMigration] = await Promise.all([
-  fetch(factoryUrl).then(e => e.json()).then(e => JSON.parse(e.result)),
-  fetch(safeProxyUrl).then(e => e.json()).then(e => JSON.parse(e.result)),
+  fetch('Factory.abi.json').then(e => e.json()).then(e => JSON.parse(e.result)),
+  fetch('SafeProxy.abi.json').then(e => e.json()).then(e => JSON.parse(e.result)),
   fetch('SafeToL2Migration.abi.json').then(e => e.json()),
   fetch('SafeToL2Migration.bytecode.txt').then(e => e.text()).then(e => e.trim())
 ])
