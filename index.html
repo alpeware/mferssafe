@@ -1,0 +1,79 @@
+<html>
+  <head>
+    <title>Mfers Safe Base Migration</title>
+    <style>
+      body {
+				font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+				margin-top: 10%;
+				margin-bottom: 10%;
+				height: 80%;
+				max-width: 80ch;
+				margin-left: auto;
+				margin-right: auto;}
+      .hidden { display: none; }
+      button { cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <h1>Mfers Safe Base Migration</h1>
+
+    <h2>1. Connect MetaMask</h2>
+    <p>
+      <button class="mm" disabled><img width="100px" src="https://docs.metamask.io/img/metamask-logo.svg"></button>
+      <div class="account"></div>
+    </p>
+
+    <div class="hidden">
+      <h2>Deploy Safe To L2 Migration Contract</h2>
+      <p>
+        <button class="deploy" disabled>Deploy</button>
+        <div class="contract"></div>
+      </p>
+    </div>
+
+    <h2>2. Sign Transaction</h2>
+    <p>
+      <label>
+        Migration Contract:
+      </label>
+      <input class="migrationContract" type="text" value="0x57A333096d2bF7b7745d604cA8462620A61646D4">
+    </p>
+    <p>
+      <button class="sign" disabled>Sign</button>
+      <div class="data"></div>
+      <div class="hash"></div>
+      <div class="signature"></div>
+    </p>
+
+    <div class="hidden">
+      <h2>Execute Transaction</h2>
+      <p>
+        <label>
+          Migration Contract:
+        </label>
+        <input class="migrationContractExec" type="text" value="0x57A333096d2bF7b7745d604cA8462620A61646D4">
+      </p>
+      <p>
+        <label>
+          Signatures:
+        </label>
+        <textarea class="signatures"></textarea>
+      </p>
+      <p>
+        <button class="execute" disabled>Execute</button>
+        <div class="data"></div>
+        <div class="hash"></div>
+        <div class="signature"></div>
+      </p>
+    </div>
+
+    <script>
+      const $ = {} 
+    </script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"
+            type="application/javascript">
+    </script>
+    <script src="index.js" type="module">
+    </script>
+  </body>
+</html>
