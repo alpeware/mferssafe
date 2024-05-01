@@ -49,7 +49,7 @@ const provider = new ethers.providers.Web3Provider(window.ethereum, "any")
 document.querySelector('.mm').addEventListener('click', async (e) => {
   try {
     const accounts = await getAccounts(provider)
-    await switchNetwork(provider, testnetChainId)
+    //await switchNetwork(provider, testnetChainId)
     const chainId = await getNetwork(provider)
     document.querySelector('.account').innerHTML = `Connected as <b>${accounts[0]}</b> on chain <b>${fromHex(chainId)}</b>`
     Array.from(document.querySelectorAll('button'))
