@@ -46,9 +46,16 @@ const getContract = (address, abi, provider) =>
 const deploy = async (contract) => contract.deploy()
 
 // setup
-const provider = new ethers.providers.Web3Provider(window.ethereum, "any")
+let provider
 
 document.querySelector('.mm').addEventListener('click', async (e) => {
+  try {
+    provider = new ethers.providers.Web3Provider(window.ethereum, "any")
+  } catch (ex) {
+    console.error(ex)
+    document.querySelector('.account').innerHTML = `Unable to detect MetaMask: ${ex}`
+    return
+  }
   try {
     const accounts = await getAccounts(provider)
     await switchNetwork(provider, testnetChainId)
