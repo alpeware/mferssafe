@@ -53,7 +53,7 @@ document.querySelector('.mm').addEventListener('click', async (e) => {
     provider = new ethers.providers.Web3Provider(window.ethereum, "any")
   } catch (ex) {
     console.error(ex)
-    document.querySelector('.account').innerHTML = `Unable to detect MetaMask: ${ex}`
+    document.querySelector('.account').innerHTML = `Unable to detect MetaMask: <pre>${JSON.stringify(ex, null, 2)}</pre>`
     return
   }
   try {
@@ -65,7 +65,7 @@ document.querySelector('.mm').addEventListener('click', async (e) => {
         .map(e => e.disabled = false)
   } catch (ex) {
     console.error(ex)
-    document.querySelector('.account').innerHTML = `Unable to connect: ${ex}`
+    document.querySelector('.account').innerHTML = `Unable to connect: <pre>${JSON.stringify(ex, null, 2)}</pre>`
   }
 })
 
@@ -86,7 +86,7 @@ document.querySelector('.deploy').addEventListener('click', async (e) => {
     document.querySelector('.contract').innerHTML = `Deployed contract to <b>${address}</b>`
   } catch (ex) {
     console.error(ex)
-    document.querySelector('.contract').innerHTML = `Unable to deploy: ${ex}`
+    document.querySelector('.contract').innerHTML = `Unable to deploy: <pre>${JSON.stringify(ex, null, 2)}</pre>`
   }
 })
 
@@ -152,12 +152,8 @@ document.querySelector('.sign').addEventListener('click', async (e) => {
     document.querySelector('.hash').innerHTML = `<p>Transaction hash: <pre>${transactionHash}</pre></p>`
 
     const from = await signer.getAddress()
-    const s = await getSignature(provider, transactionHash, from)
-    console.log(s)
-
-    // adapt last byte for safe personal signatures
-    //const signature = s.slice(0, -2) + (parseInt(s.slice(-2), 16) + 4).toString(16)
-    const signature = s
+    const signature = await getSignature(provider, transactionHash, from)
+    console.log(signature)
 
     document.querySelector('.signature').innerHTML = `
       <h2>3. Copy Signature</h2>
@@ -166,14 +162,108 @@ document.querySelector('.sign').addEventListener('click', async (e) => {
       `
 
     document.querySelector('.signed').focus()
-
-    //const check = await safeContract.checkSignatures(transactionHash, transactionData, signature)
   } catch (ex) {
     console.error(ex)
-    document.querySelector('.signature').innerHTML = `Unable to sign: ${ex}`
+    document.querySelector('.signature').innerHTML = `Unable to sign: <pre>${JSON.stringify(ex, null, 2)}</pre>`
   }
 })
 
+document.querySelector('.exec').addEventListener('click', async (e) => {
+  try {
+    const signer = await getSigner(provider)
+    const safeContract = getContract(mfersSafe, abiProxy, signer)
+
+    const migrationContract = getContract(migrationContractAddress, abiMigration, provider)
+    const callData = migrationContract.interface.encodeFunctionData('migrateToL2', [ safeL2 ])
+    console.log(callData)
+
+    const transaction = {
+      to: migrationContractAddress,
+      value: 0,
+      data: callData,
+      operation: 1,
+      safeTxGas: 0,
+      baseGas: 0,
+      gasPrice: 0,
+      gasToken: ethers.constants.AddressZero,
+      refundReceiver: ethers.constants.AddressZero,
+      nonce: 0
+    }
+    const {
+      to,
+      value,
+      data,
+      operation,
+      safeTxGas,
+      baseGas,
+      gasPrice,
+      gasToken,
+      refundReceiver,
+      nonce
+    } = transaction
+    const transactionData = await safeContract.encodeTransactionData(
+      to,
+      value,
+      data,
+      operation,
+      safeTxGas,
+      baseGas,
+      gasPrice,
+      gasToken,
+      refundReceiver,
+      nonce)
+    console.log(transactionData)
+
+    const transactionHash = await safeContract.getTransactionHash(
+      to,
+      value,
+      data,
+      operation,
+      safeTxGas,
+      baseGas,
+      gasPrice,
+      gasToken,
+      refundReceiver,
+      nonce)
+    console.log(transactionHash)
+
+
+    const signatures = '0x' + Array.from(document.querySelectorAll('textarea.signature'))
+        .map(e => e.value)
+        .filter(e => e.trim() !== '')
+        .map(e => e.split(':').map(f => f.trim()))
+        // adapt last byte for safe personal signatures
+        .map(([a, s]) => [a, s.slice(0, -2) + (parseInt(s.slice(-2), 16) + 4).toString(16)])
+        // sort by address
+        .sort(([a, e], [b, f]) => a.localeCompare(b))
+        .map(e => e[1].slice(2)).join('')
+    console.log(signatures)
+
+    document.querySelector('.data').innerHTML = `<p>Transaction data: <pre>${transactionData}</pre></p>`
+    document.querySelector('.hash').innerHTML = `<p>Transaction hash: <pre>${transactionHash}</pre></p>`
+    document.querySelector('.signatures').innerHTML = `<p>Transaction signatures: <pre>${signatures}</pre></p>`
+
+    const check = await safeContract.checkSignatures(transactionHash, transactionData, signatures)
+    console.log(check)
+
+    const exec = await safeContract.execTransaction(
+      to,
+      value,
+      data,
+      operation,
+      safeTxGas,
+      baseGas,
+      gasPrice,
+      gasToken,
+      refundReceiver,
+      signatures)
+    console.log(exec)
+
+  } catch (ex) {
+    console.error(ex)
+    document.querySelector('.signatures').innerHTML = `Error: <pre>${JSON.stringify(ex, null, 2)}</pre>`
+  }
+})
 document.querySelector('.mm').disabled = false
 
 Object.assign($, { provider, getSigner, abiProxy })
